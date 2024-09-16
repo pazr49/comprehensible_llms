@@ -7,6 +7,11 @@ import os
 client = OpenAI()
 
 def generate_initial_story(system_message, user_messages):
+    messages = [
+                   {"role": "system", "content": system_message}
+               ] + user_messages
+
+    print(messages)
     """
     Sends a request to the OpenAI API to generate a part of the story.
     :param system_message: The system message setting the context for the API.
@@ -18,11 +23,11 @@ def generate_initial_story(system_message, user_messages):
         messages=[
             {"role": "system", "content": system_message}
         ]+ user_messages,
-        temperature = 0.88,
+        temperature = 1,
         max_tokens = 1343,
         top_p = 1,
-        frequency_penalty = 0,
-        presence_penalty = 0,
+        frequency_penalty = 0.3,
+        presence_penalty = 0.3,
         response_format = {
             "type": "json_schema",
             "json_schema": {
@@ -57,7 +62,6 @@ def generate_initial_story(system_message, user_messages):
     )
     return response.choices[0].message.content
 
-
 def generate_next_chapter(system_message, user_messages):
     """
     Function to generate the next chapter of the story using OpenAI's API.
@@ -72,7 +76,7 @@ def generate_next_chapter(system_message, user_messages):
     try:
         # Call the OpenAI API with the constructed messages
         response = client.chat.completions.create(
-            model="gpt-4",  # Use the appropriate model, such as GPT-4 or any specific one you have access to
+            model="gpt-4o-mini",  # Use the appropriate model, such as GPT-4 or any specific one you have access to
             messages=[
                 {"role": "system", "content": system_message},
                 *user_messages  # Spread the user messages list into the messages array
@@ -108,8 +112,101 @@ def generate_next_chapter(system_message, user_messages):
         )
 
         # Extract the generated text from the response
-        next_chapter_content = response['choices'][0]['message']['content']
-        return next_chapter_content
+        return response.choices[0].message.content
+
+    except Exception as e:
+        print(f"Error generating the next chapter: {e}")
+        return "Error: Could not generate the next chapter."
+
+def generate_story_structure(system_message, user_messages):
+    try:
+        # Call the OpenAI API with the constructed messages
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_message},
+                *user_messages  # Spread the user messages list into the messages array
+            ],
+            temperature=1,
+            max_tokens=1343,
+            top_p=1,
+            frequency_penalty=0.29,
+            presence_penalty=0.35,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "story_response",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "characters": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "character_name": {
+                                            "type": "string"
+                                        },
+                                        "character_summary": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "character_name",
+                                        "character_summary"
+                                    ],
+                                    "additionalProperties": False
+                                }
+                            },
+                            "story_summary": {
+                                "type": "string"
+                            },
+                            "plot_twist": {
+                                "type": "string"
+                            },
+                            "moral": {
+                                "type": "string"
+                            },
+                            "chapters": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "chapter_title": {
+                                            "type": "string"
+                                        },
+                                        "chapter_summary": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "chapter_title",
+                                        "chapter_summary"
+                                    ],
+                                    "additionalProperties": False
+                                }
+                            }
+                        },
+                        "additionalProperties": False,
+                        "required": [
+                            "title",
+                            "characters",
+                            "story_summary",
+                            "plot_twist",
+                            "moral",
+                            "chapters"
+                        ]
+                    }
+                }
+            }
+        )
+
+        # Extract the generated text from the response
+        return response.choices[0].message.content
 
     except Exception as e:
         print(f"Error generating the next chapter: {e}")
