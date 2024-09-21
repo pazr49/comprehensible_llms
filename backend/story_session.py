@@ -3,7 +3,7 @@ from conversation import Conversation
 import json
 
 class StorySession:
-    def __init__(self, session_id, story_id, story_title, characters, story_summary, plot_twist, moral, chapters, conversation=None):
+    def __init__(self, session_id, story_id, story_title, characters, story_summary, plot_twist, moral, chapters, conversation=None, language=None, level=None):
         self.session_id = session_id  # Unique session identifier
         self.story_id = story_id  # ID of the selected story
         self.story_title = story_title  # Title of the story
@@ -15,6 +15,8 @@ class StorySession:
         self.story_content = {}  # Store each chapter and its feedback
         self.chapter_number = 1  # Track the current chapter number
         self.conversation = conversation if conversation else Conversation()
+        self.language = language
+        self.level = level
 
     def add_chapter(self, chapter_number, chapter_content, feedback):
         """Add a new chapter with feedback to the story session."""
@@ -48,5 +50,7 @@ class StorySession:
             "chapters": self.chapters,
             "story_content": self.story_content,
             "chapter_number": self.chapter_number,
-            "conversation": self.conversation.get_serialized_history()
+            "conversation": self.conversation.get_serialized_history(),
+            "language": self.language,
+            "level": self.level
         }, indent=4)

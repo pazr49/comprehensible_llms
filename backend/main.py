@@ -1,8 +1,14 @@
-# backend/app.py
+# backend/main.py
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from story_manager import start_story, fetch_next_chapter
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file only if not already set
+if not os.getenv('MODE'):
+    load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -19,9 +25,10 @@ def get_stories():
     story_list = [{"id": id, "title": story["title"]} for id, story in stories.items()]
     return jsonify(story_list)
 
-@app.route('/api/start_story/<int:story_id>', methods=['GET'])
+@app.route('/api/start_story/<int:story_id>', methods=['POST'])
 def generate_story(story_id):
-    result = start_story(story_id)
+    data = request.get_json()
+    result = start_story(data, story_id)
     return jsonify(result)
 
 @app.route('/api/next_chapter', methods=['POST'])
@@ -31,4 +38,4 @@ def get_next_chapter():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=os.getenv('MODE') == 'staging')

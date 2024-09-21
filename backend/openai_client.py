@@ -2,18 +2,22 @@
 
 from openai import OpenAI
 import os
+import json
+from tests.mock_responses import mock_generate_story_structure, mock_generate_next_chapter
 
 # Initialize the OpenAI client
 client = OpenAI()
 
 def generate_story_structure(system_message, user_messages):
+    if os.getenv('MODE') == 'staging':
+        return mock_generate_story_structure(system_message, user_messages)
     try:
         # Call the OpenAI API with the constructed messages
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 system_message,
-                *user_messages  # Spread the user messages list into the messages array
+                user_messages  # Spread the user messages list into the messages array
             ],
             temperature=1,
             max_tokens=1343,
@@ -97,53 +101,45 @@ def generate_story_structure(system_message, user_messages):
         return response.choices[0].message.content
 
     except Exception as e:
-        print(f"Error generating the next chapter: {e}")
-        return "Error: Could not generate the next chapter."
+        print(f"Error generating the story structure: {e}")
+        return "Error: Could not generate the story structure."
 
 def generate_next_chapter(conversation_history):
-    """
-    Function to generate the next chapter of the story using OpenAI's API.
-
-    Args:
-    system_message (str): The system-level instructions for the OpenAI model.
-    user_messages (list): The list of user and assistant messages to provide context to the OpenAI API.
-
-    Returns:
-    str: The generated next chapter content.
-    """
+    if os.getenv('MODE') == 'staging':
+        return mock_generate_next_chapter(conversation_history)
     try:
         # Call the OpenAI API with the constructed messages
         response = client.chat.completions.create(
             model="gpt-4o-mini",  # Use the appropriate model, such as GPT-4 or any specific one you have access to
             messages=conversation_history,
-        temperature = 0.88,
-        max_tokens = 1343,
-        top_p = 1,
-        frequency_penalty = 0,
-        presence_penalty = 0,
-        response_format = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "story_response",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "full_chapter": {
-                            "type": "string"
+            temperature=0.88,
+            max_tokens=1343,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "story_response",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "full_chapter": {
+                                "type": "string"
+                            },
+                            "chapter_number": {
+                                "type": "string"
+                            }
                         },
-                        "chapter_number": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": False,
-                    "required": [
-                        "full_chapter",
-                        "chapter_number"
-                    ]
+                        "additionalProperties": False,
+                        "required": [
+                            "full_chapter",
+                            "chapter_number"
+                        ]
+                    }
                 }
             }
-        }
         )
 
         # Extract the generated text from the response
