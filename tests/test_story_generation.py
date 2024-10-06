@@ -2,7 +2,6 @@
 
 import unittest
 from unittest.mock import patch
-from backend.openai_client import generate_story_structure, generate_next_chapter
 from mock_responses import mock_generate_story_structure, mock_generate_next_chapter
 
 class TestStoryGeneration(unittest.TestCase):

@@ -54,14 +54,18 @@ class Conversation:
         Get the conversation history serialized as a JSON string.
         :return: A JSON string representing the conversation history.
         """
-        return json.dumps(self.history)
+        return self.history
 
-    def load_history_from_json(self, json_data):
+    @staticmethod
+    def load_history_from_json(json_data):
         """
         Load conversation history from a JSON string.
         :param json_data: A JSON string representing the conversation history.
+        :return: A Conversation instance with the loaded history.
         """
-        self.history = json.loads(json_data)
+        conversation = Conversation()
+        conversation.history = json.loads(json_data)
+        return conversation
 
     def clear_history(self):
         """

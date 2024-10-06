@@ -2,22 +2,21 @@
 
 from openai import OpenAI
 import os
-import json
 from tests.mock_responses import mock_generate_story_structure, mock_generate_next_chapter
 
 # Initialize the OpenAI client
 client = OpenAI()
 
-def generate_story_structure(system_message, user_messages):
+def openai_generate_story(system_message, user_message):
     if os.getenv('MODE') == 'staging':
-        return mock_generate_story_structure(system_message, user_messages)
+        return mock_generate_story_structure(system_message, user_message)
     try:
         # Call the OpenAI API with the constructed messages
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 system_message,
-                user_messages  # Spread the user messages list into the messages array
+                user_message
             ],
             temperature=1,
             max_tokens=1343,
@@ -33,34 +32,6 @@ def generate_story_structure(system_message, user_messages):
                         "type": "object",
                         "properties": {
                             "title": {
-                                "type": "string"
-                            },
-                            "characters": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "character_name": {
-                                            "type": "string"
-                                        },
-                                        "character_summary": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "character_name",
-                                        "character_summary"
-                                    ],
-                                    "additionalProperties": False
-                                }
-                            },
-                            "story_summary": {
-                                "type": "string"
-                            },
-                            "plot_twist": {
-                                "type": "string"
-                            },
-                            "moral": {
                                 "type": "string"
                             },
                             "chapters": {
@@ -86,10 +57,6 @@ def generate_story_structure(system_message, user_messages):
                         "additionalProperties": False,
                         "required": [
                             "title",
-                            "characters",
-                            "story_summary",
-                            "plot_twist",
-                            "moral",
                             "chapters"
                         ]
                     }
@@ -104,7 +71,7 @@ def generate_story_structure(system_message, user_messages):
         print(f"Error generating the story structure: {e}")
         return "Error: Could not generate the story structure."
 
-def generate_next_chapter(conversation_history):
+def openai_generate_chapter(conversation_history):
     if os.getenv('MODE') == 'staging':
         return mock_generate_next_chapter(conversation_history)
     try:
